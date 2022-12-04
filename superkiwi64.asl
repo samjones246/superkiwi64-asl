@@ -1,17 +1,13 @@
-state("SuperKiwi64") { }
+state("SuperKiwi64") {}
 
 startup
 {
-    vars.Log = (Action<object>)((output) => print("[SuperKiwi64 ASL] " + output));
-    var bytes = File.ReadAllBytes(@"Components\LiveSplit.ASLHelper.bin");
-	var type = Assembly.Load(bytes).GetType("ASLHelper.Unity");
-	vars.Helper = Activator.CreateInstance(type, timer, this);
-	vars.Helper.LoadSceneManager = true;
+    Assembly.Load(File.ReadAllBytes("Components/asl-help")).CreateInstance("Unity");
+    vars.Helper.GameName = "SuperKiwi64";
+    vars.Helper.LoadSceneManager = true;
 
-    vars.TimerModel = new TimerModel { CurrentState = timer };
-
-    var levelNames = new String[] {
-        "Forest Village", "Mushroom Dorf", 
+    string[] levelNames = {
+        "Forest Village", "Mushroom Dorf",
         "Train Station", "High Towers",
         "Temple", "Chamber",
         "Pirate Island", "Big Bay"
@@ -27,46 +23,33 @@ startup
     settings.Add("split_powerstone", false, "Split on powerstone collected");
 }
 
-
 init
 {
-    vars.Helper.TryOnLoad = (Func<dynamic, bool>)(mono =>
-	{
-        var GameManager = mono.GetClass("GameManager");
-        var PlayerSystem = mono.GetClass("PlayerSystem");
-        vars.Helper["collectedCells"] = GameManager.Make<int>("singleton", "collectedCells");
-        vars.Helper["LastPos"] = GameManager.Make<IntPtr>("singleton", "myPlayerSystem", PlayerSystem["LastPos"]);
-        vars.Helper["NextLevelID"] = GameManager.Make<int>("singleton", "NextLevelID");
+    vars.Helper.TryLoad = (Func<dynamic, bool>)(mono =>
+    {
+        vars.Helper["powerstones"] = mono.Make<int>("GameManager", "singleton", "collectedCells");
+        vars.Helper["lastPos"] = mono.Make<IntPtr>("GameManager", "singleton", "myPlayerSystem", "LastPos");
+        vars.Helper["nextScene"] = mono.Make<int>("GameManager", "singleton", "NextLevelID");
+
         return true;
     });
-
-    vars.Helper.Load();
-
-    vars.init = true;
 }
 
 update
 {
-    if (!vars.Helper.Loaded) return false;
-	
-	vars.Helper.Update();
-	
-	if (vars.Helper.Scenes.Active.Name != "")
-	{
-		current.scene = vars.Helper.Scenes.Active.Index;
-	}
+    if (vars.Helper.Scenes.Active.Name != "")
+    {
+        current.scene = vars.Helper.Scenes.Active.Index;
+    }
 
-    current.nextScene = vars.Helper["NextLevelID"].Current;
-    current.powerstones = vars.Helper["collectedCells"].Current;
- 
-	if (old.scene != current.scene) { 
-        vars.Log(String.Concat("Scene Change: ", current.scene, ": ", vars.Helper.Scenes.Active.Name));
+    if (old.scene != current.scene) {
+        vars.Log("Scene Change: " + current.scene + ": " + vars.Helper.Scenes.Active.Name);
     }
 }
 
 start
 {
-    return vars.Helper["LastPos"].Old == IntPtr.Zero && vars.Helper["LastPos"].Changed;
+    return old.lastPos == IntPtr.Zero && current.lastPos != IntPtr.Zero;
 }
 
 split
@@ -91,7 +74,6 @@ split
     if (current.powerstones != old.powerstones) {
         return settings["split_powerstone"];
     }
-    return false;
 }
 
 isLoading
@@ -101,5 +83,5 @@ isLoading
 
 exit
 {
-    vars.TimerModel.Reset();
+    vars.Helper.Timer.Reset();
 }
