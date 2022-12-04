@@ -10,14 +10,15 @@ startup
         "Forest Village", "Mushroom Dorf",
         "Train Station", "High Towers",
         "Temple", "Chamber",
-        "Pirate Island", "Big Bay"
+        "Pirate Island", "Big Bay",
+        "Jungle Course", "Kiwi 64"
     };
     settings.Add("split_enter", false, "Split on enter level");
     settings.Add("split_exit", true, "Split on exit level");
-    for (int i=2;i<=9;i++) {
+    for (int i=2;i<=11;i++) {
         var description = "" + (i-1) + " - " + levelNames[i-2];
         settings.Add("split_enter_"+i, false, description, "split_enter");
-        settings.Add("split_exit_"+i, true, description, "split_exit");
+        settings.Add("split_exit_"+i, i <= 9, description, "split_exit");
     }
 
     settings.Add("split_powerstone", false, "Split on powerstone collected");
