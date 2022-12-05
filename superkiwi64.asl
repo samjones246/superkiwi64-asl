@@ -34,6 +34,7 @@ init
 
         return true;
     });
+    vars.prevScene = -1;
 }
 
 update
@@ -56,7 +57,9 @@ start
 split
 {
     // Level change
-    if (current.nextScene != old.nextScene) {
+    if (current.nextScene != old.nextScene && current.nextScene != 0) {
+        vars.Log("scene: " + current.scene);
+        vars.Log("nextScene: " + current.nextScene);
         // Enter plane
         if (current.nextScene == 12) {
             return true;
@@ -64,11 +67,14 @@ split
 
         // Enter hub
         if (current.nextScene == 1) {
-            return settings["split_exit_"+old.scene];
+            vars.prevScene = 1;
+            int target = current.scene != 0 ? current.scene : vars.prevScene;
+            return settings["split_exit_"+target];
         }
 
         // Enter level
-        return settings["split_enter_"+current.scene];
+        vars.prevScene = current.nextScene;
+        return settings["split_enter_"+current.nextScene];
     }
 
     // Collect powerstone
@@ -79,7 +85,7 @@ split
 
 isLoading
 {
-    return current.nextScene != 0;
+    return current.nextScene != 0 || current.scene == 0;
 }
 
 exit
