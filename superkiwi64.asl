@@ -29,9 +29,8 @@ init
     vars.Helper.TryLoad = (Func<dynamic, bool>)(mono =>
     {
         vars.Helper["powerstones"] = mono.Make<int>("GameManager", "singleton", "collectedCells");
-        vars.Helper["lastPos"] = mono.Make<IntPtr>("GameManager", "singleton", "myPlayerSystem", "LastPos");
         vars.Helper["nextScene"] = mono.Make<int>("GameManager", "singleton", "NextLevelID");
-
+        vars.Helper["titleActive"] = mono.Make<bool>("HubWorldManagerScript", "singleton", "TitleScreenObject", 0x10, 0x56);
         return true;
     });
     vars.prevScene = -1;
@@ -51,7 +50,7 @@ update
 
 start
 {
-    return old.lastPos == IntPtr.Zero && current.lastPos != IntPtr.Zero;
+    return !current.titleActive && old.titleActive;
 }
 
 split
@@ -81,6 +80,11 @@ split
     if (current.powerstones != old.powerstones) {
         return settings["split_powerstone"];
     }
+}
+
+reset
+{
+    return current.titleActive && !old.titleActive;
 }
 
 isLoading
